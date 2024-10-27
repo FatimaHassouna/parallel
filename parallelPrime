@@ -1,0 +1,166 @@
+#include <stdio.h>
+
+#include <mpi.h>
+
+
+
+int main(int argc, char *argv[]) {
+
+    int rank, size, prime;
+
+    int candidate = 2;
+
+    int k, prime_count = 0;
+
+    double start_time, end_time;
+
+
+
+    MPI_Init(&argc, &argv);                  
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);    
+
+    MPI_Comm_size(MPI_COMM_WORLD, &size);    
+
+
+
+    start_time = MPI_Wtime(); 
+
+
+
+    if (rank == 0) {
+
+        prime = candidate;
+
+        MPI_Send(&prime, 1, MPI_INT, rank + 1, 0, MPI_COMM_WORLD);
+
+        printf("Prime found: %d\n", prime); 
+
+        prime_count++;
+
+
+
+        candidate++; 
+
+        while (prime_count < size) {
+
+            int is_prime = 1;
+
+            for (int i = 2; i * i <= candidate; i++) {
+
+                if (candidate % i == 0) {
+
+                    is_prime = 0;
+
+                    break;
+
+                }
+
+            }
+
+
+
+            if (is_prime) {
+
+                prime = candidate;
+
+                MPI_Send(&prime, 1, MPI_INT, rank + 1, 0, MPI_COMM_WORLD);
+
+                printf("Prime found: %d\n", prime); // Print next prime found
+
+                prime_count++;
+
+            }
+
+            candidate++;
+
+        }
+
+
+
+        // Send termination signal
+
+        prime = -1;
+
+        MPI_Send(&prime, 1, MPI_INT, rank + 1, 0, MPI_COMM_WORLD);
+
+
+
+    } else {
+
+        while (1) {
+
+            MPI_Recv(&prime, 1, MPI_INT, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+
+
+            if (prime == -1) { // Termination signal
+
+                if (rank < size - 1) {
+
+                    MPI_Send(&prime, 1, MPI_INT, rank + 1, 0, MPI_COMM_WORLD);
+
+                }
+
+                break;
+
+            }
+
+
+
+            // Filter multiples of received prime and pass the rest to next rank
+
+            candidate = prime + 1;
+
+            while (1) {
+
+                int is_prime = 1;
+
+                for (int i = 2; i * i <= candidate; i++) {
+
+                    if (candidate % i == 0) {
+
+                        is_prime = 0;
+
+                        break;
+
+                    }
+
+                }
+
+
+
+                if (is_prime) {
+
+                    MPI_Send(&candidate, 1, MPI_INT, rank + 1, 0, MPI_COMM_WORLD);
+
+                    break;
+
+                }
+
+                candidate++;
+
+            }
+
+        }
+
+    }
+
+
+
+    end_time = MPI_Wtime(); // End the timer
+
+    if (rank == 0) {
+
+        printf("Execution time: %f seconds\n", end_time - start_time);
+
+    }
+
+
+
+    MPI_Finalize();
+
+    return 0;
+
+}
+

@@ -1,0 +1,98 @@
+#include <stdio.h>
+
+#include <stdlib.h>
+
+#include <stdbool.h>
+
+#include <time.h>
+
+
+void sieve_of_eratosthenes(int n) {
+
+    int count = 0; // Count of found primes
+
+    int candidate = 2; // First number to check
+
+    int *primes = malloc(n * sizeof(int)); // Array to store found primes
+
+
+
+    while (count < n) {
+
+        bool is_prime = true;
+
+        for (int i = 2; i * i <= candidate; i++) {
+
+            if (candidate % i == 0) {
+
+                is_prime = false;
+
+                break;
+
+            }
+
+        }
+
+        if (is_prime) {
+
+            primes[count] = candidate;
+
+            count++;
+
+        }
+
+
+
+        candidate++;
+
+    }
+
+
+    printf("The First %d prime numbers are:\n", n);
+
+    for (int i = 0; i < n; i++) {
+
+        printf("%d ", primes[i]);
+
+    }
+
+    printf("\n");
+
+
+
+    free(primes);
+
+}
+
+
+
+int main() {
+
+    int n;
+
+    clock_t start_time, end_time;
+
+    printf("Enter the number of primes to find: ");
+
+    scanf("%d", &n);
+
+
+
+    start_time = clock(); 
+
+    sieve_of_eratosthenes(n);
+
+    end_time = clock(); 
+
+
+
+    double execution_time = (double)(end_time - start_time) / CLOCKS_PER_SEC; // Calculate elapsed time
+
+    printf("Sequential execution time: %f seconds\n", execution_time);
+
+
+
+    return 0;
+
+}
+
